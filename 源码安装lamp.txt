@@ -1,0 +1,263 @@
+lamp
+http 2.4
+
+
+
+
+#安装apr
+./configure --prefix=/usr/local/apr
+make
+make install
+
+
+
+#安装apr-util
+./configure --prefix=/usr/local/apr-util --with-apr=/usr/local/apr
+make
+make install
+
+
+#依赖
+yum install pcre-devel zlib zlib-devel
+
+
+
+#安装httpd
+./configure \
+--prefix=/application/httpd-2.4.33 \
+--with-apr=/usr/local/apr \
+--with-apr-util=/usr/local/apr-util \
+--enable-module=so \
+--enable-deflate=shared \
+--enable-expires=shared \
+--enable-rewrite=shared \
+--enable-cache \
+--enable-file-cache \
+--enable-mem-cache \
+--enable-disk-cache \
+--enable-static-support \
+--enable-static-ab \
+--disable-userdir \
+--with-mpm=worker \
+--enable-nonportable-atomics \
+--disable-ipv6 \
+--with-sendfile
+
+
+make
+make install
+
+
+#检查语法
+./apachectl -t
+
+#启动
+./apachectl -k start
+
+
+#查看编译的模块
+./apachectl -l
+./apachectl -M
+
+
+#http主配置文件
+/application/httpd-2.4.33/conf/httpd.conf
+
+ServerName 127.0.0.1:80
+
+#http服务程序目录
+ServerRoot "/application/httpd-2.4.33"
+
+
+#站点根目录
+DocumentRoot "/application/httpd-2.4.33/htdocs"
+<Directory "/application/httpd-2.4.33/htdocs">
+    #
+    # Possible values for the Options directive are "None", "All",
+    # or any combination of:
+    #   Indexes Includes FollowSymLinks SymLinksifOwnerMatch ExecCGI MultiViews
+    #
+    # Note that "MultiViews" must be named *explicitly* --- "Options All"
+    # doesn't give it to you.
+    #
+    # The Options directive is both complicated and important.  Please see
+    # http://httpd.apache.org/docs/2.4/mod/core.html#options
+    # for more information.
+    #
+    Options Indexes FollowSymLinks
+
+    #
+    # AllowOverride controls what directives may be placed in .htaccess files.
+    # It can be "All", "None", or any combination of the keywords:
+    #   AllowOverride FileInfo AuthConfig Limit
+    #
+    AllowOverride None
+
+    #
+    # Controls who can get stuff from this server.
+    #
+    Require all granted
+</Directory>
+
+
+
+#站点首页文件
+<IfModule dir_module>
+    DirectoryIndex index.html
+</IfModule>
+
+
+
+#include配置文件
+</IfModule>
+Include conf/extra/httpd-mpm.conf
+Include conf/extra/httpd-vhosts.conf
+Include conf/extra/httpd-default.conf
+<IfModule proxy_html_module>
+Include conf/extra/proxy-html.conf
+</IfModule>
+
+
+
+
+
+PHP安装配置
+
+#安装依赖
+yum install -y zlib libjpeg freetype libpng gd curl zlib-devel libxml2-devel libjpeg-devel freetype-devel libpng-devel gd-devel curl-devel libjpeg-turbo-devel libcurl-devel libxslt-devel
+yum -y install libmcrypt-devel mhash mcrypt
+
+
+配置编译选项
+./configure \
+--prefix=/application/php-5.5.38 \
+--enable-mysqlnd \
+--with-mysql=mysqlnd \
+--with-mysqli=mysqlnd \
+--with-pdo-mysql=mysqlnd \
+--with-freetype-dir \
+--with-jpeg-dir \
+--with-png-dir \
+--with-zlib \
+--with-libxml-dir=/usr \
+--enable-xml \
+--disable-rpath \
+--enable-bcmath \
+--enable-shmop \
+--enable-sysvsem \
+--enable-inline-optimization \
+--with-curl \
+--enable-mbregex \
+--enable-mbstring \
+--with-mcrypt \
+--with-gd \
+--with-gettext \
+--enable-gd-native-ttf \
+--with-openssl \
+--with-mhash \
+--enable-pcntl \
+--enable-sockets \
+--with-xmlrpc \
+--enable-zip \
+--enable-soap \
+--enable-short-tags \
+--enable-static \
+--with-xsl \
+--enable-fpm \
+--with-fpm-user=www \
+--with-fpm-group=www \
+--enable-opcache=no  \
+--enable-ftp \
+--with-apxs2=/application/httpd-2.4.33/bin/apxs
+
+
+
+
+
+
+
+make
+make install
+
+
+#php解释器配置文件
+cp /server/tools/php-5.5.38/php.ini-production /application/php-5.5.38/lib/php.ini
+
+
+
+
+
+#http配置文件 httpd.conf  配置支持php
+
+#添加php模块
+LoadModule php5_module        modules/libphp5.so
+
+
+#添加php首页文件
+<IfModule dir_module>
+    DirectoryIndex index.php index.html
+</IfModule>
+
+
+#添加php应用类型
+<IfModule mime_module>
+    TypesConfig conf/mime.types
+    AddType application/x-compress .Z
+    AddType application/x-gzip .gz .tgz
+    AddType application/x-httpd-php .php
+</IfModule>
+
+
+
+#PHP测试文件
+/application/httpd/htdocs/index.php 
+<?php
+phpinfo();
+?>
+
+
+
+
+
+
+#MySQL中创建bbs用户并授权
+create database bbs;
+grant all on bbs.* to bbs@'172.16.1.%' identified by '123456';
+
+
+#测试MySQL中的bbs用户登录
+mysql -h 172.16.1.51 -ubbs -p123456
+
+
+
+#测试php连接MySQL
+/application/httpd/htdocs/php_mysql.php 
+<?php
+        //$link_id=mysql_connect('主机名','用户','密码');
+        $link_id=mysql_connect('172.16.1.51','bbs','123456') or mysql_error();
+        if($link_id){
+                echo "mysql successful by wordpress !\n";
+        }else{
+                echo "mysql_error()";
+
+        }
+
+?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
