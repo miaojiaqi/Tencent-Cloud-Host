@@ -1,9 +1,5 @@
 #!/bin/bash
 source /etc/profile
-echo "-------------------config hostname---------------------------------"
-read -p "Please enter hostname:" ${Host}
-hostnamectl set-hostname ${Host} && bash
-echo '>>> config hostname is ok'
 
 echo "-----------------------create dir-------------------------------"
 [ -d  /server ]      || mkdir -p /server/{tools,scripts}  
